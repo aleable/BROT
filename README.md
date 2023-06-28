@@ -6,7 +6,7 @@ ___
 
 BROT 🍞 (**B**ilevel **R**outing on networks with **O**ptimal **T**ransport) is a Python implementation of the algorithms used in:
 
-- [1] Alessandro Lonardi and Caterina De Bacco. <i>Bilevel Optimization for Traffic Mitigation in Optimal Transport Networks</i>. [***TODO: ADD LINK***].
+- [1] Alessandro Lonardi and Caterina De Bacco. <i>Bilevel Optimization for Traffic Mitigation in Optimal Transport Networks</i>.
 
 This is a scheme capable of extracting origin-destination paths on networks by making a trade off between transportation efficiency and over-trafficking of links. The core algorithm alternates the integration of a system of ODEs to find passengers' shortest origin-destination routes, and Projected Gradient Descent to mitigate traffic.
 
