@@ -11,8 +11,6 @@
 *.pyc
 *.DS_Store
 .cache
-*.pkl
-*pickle
 *.idea
 *pycache*
 *~*
