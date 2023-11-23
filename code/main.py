@@ -53,6 +53,7 @@ def main():
         - GDex: flag to execute GD
         - proj: projection method, needs to be one between "clipping", "momentum"
         - alpha: restituition coefficient for momentum
+        - mask: mask for stochastic GD (q)
     """
 
     pars = ArgumentParser()
@@ -89,6 +90,7 @@ def main():
     pars.add_argument("-GDex", "--exec_GD", type=lambda x: bool(int(x)), default=True)
     pars.add_argument("-proj", "--proj_method", type=str, default="clipping")
     pars.add_argument("-alpha", "--alpha_restituition", type=float, default=5)
+    pars.add_argument("-mask", "--mask", type=float, default=1.0)
 
     args = pars.parse_args()
 
@@ -120,6 +122,7 @@ def main():
     epsw = args.eps_w
     proj_method = args.proj_method
     alpha_restituition = args.alpha_restituition
+    mask = args.mask
     totsteps = args.tot_steps
     itcheckstart = args.it_check_start
     TIME_STEP_EXP_VERB = args.ts_exp_verb
@@ -178,6 +181,7 @@ def main():
         GDexec=GDexec,
         proj_method=proj_method,
         alpha_restituition=alpha_restituition,
+        mask=mask,
         verbose=verbose,
         it_check_start=itcheckstart,
         TIME_STEP_EXP_VERB=TIME_STEP_EXP_VERB,
@@ -231,6 +235,7 @@ def main():
             GDexec=False,
             proj_method=proj_method,
             alpha_restituition=alpha_restituition,
+            mask=mask,
             verbose=verbose,
             it_check_start=itcheckstart,
             TIME_STEP_EXP_VERB=TIME_STEP_EXP_VERB,

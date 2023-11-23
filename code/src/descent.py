@@ -35,6 +35,7 @@ def gd(
     proj_method: str,
     epsilon: float,
     alpha: float,
+    mask: float,
     relax: float,
     psi: np.ndarray,
     psievol: list,
@@ -59,6 +60,7 @@ def gd(
     :param proj_method: rojection method
     :param epsilon: constraint of weights
     :param alpha: restituition coefficient
+    :param mask: mask for stochastic GD (q)
     :param relax: relaxation for Laplacian inversion
     :param psi: gradient
     :param psievol: gradient evolution
@@ -107,11 +109,13 @@ def gd(
             theta,
             B,
             E,
+            N,
             M,
             psievol,
             proj_method,
             epsilon,
             alpha,
+            mask,
             step,
             TSEV,
         )
@@ -146,11 +150,13 @@ def update_w(
     theta: float,
     B: csr_matrix,
     E: int,
+    N: int,
     M: int,
     psievol: list,
     proj_method: str,
     epsilon: float,
     alpha: float,
+    mask: float,
     step: int,
     TSEV: int,
 ) -> {np.ndarray, np.ndarray}:
@@ -171,11 +177,13 @@ def update_w(
     :param theta: critical threshold for congestion
     :param B: incidence matrix
     :param E: number of edges
+    :param N: number of nodes
     :param M: number of commodities
     :param psievol: gradient evolution
     :param proj_method: projection method
     :param epsilon: constraint of weights
     :param alpha: restituition coefficient
+    :param mask: mask stochastic GD
     :param step: time step
     :param TSEV: ime frequency for serialization of variables
     :return: weights, gradient, gradient evolution
@@ -190,6 +198,7 @@ def update_w(
         theta: float,
         B: csr_matrix,
         E: int,
+        N: int,
         M: int,
     ) -> np.ndarray:
         """
@@ -202,11 +211,14 @@ def update_w(
         :param theta: critical threshold for congestion
         :param B: incidence matrix
         :param E: number of edges
+        :param N: number of nodes
         :param M: number of commodities
         :return: gradient
         """
 
         delta_tile = np.zeros((E, E, M))
+        Ls = np.zeros((N, N, M))
+        Lps = np.zeros((N, N, M))
         GLap = np.zeros((E, E, M))
 
         Delta = (Fnorm - theta) * np.heaviside(Fnorm - theta, 0)
@@ -214,9 +226,9 @@ def update_w(
 
         for i in range(M):
             delta_tile[:, :, i] = deltaedge
-            Li = B * diags(mu[:, i] / w) * B.T
-            Lpsi = np.linalg.pinv(Li.todense(), rcond=1e-15, hermitian=True)
-            GLap[:, :, i] = B.T * Lpsi * B
+            Ls[:, :, i] = B * diags(mu[:, i]).todense() * diags(1 / w) * B.T
+            Lps[:, :, i] = np.linalg.pinv(Ls[:, :, i], rcond=1e-15, hermitian=True)
+            GLap[:, :, i] = B.T * Lps[:, :, i] * B
 
         chainrule1 = np.einsum("li,l,li,lei->lei", mu, 1 / w, np.sign(F), GLap)
         chainrule2 = np.einsum("ei,lei->lei", np.sign(F), delta_tile)
@@ -225,12 +237,16 @@ def update_w(
 
         return psi
 
-    psi = get_gradients(w, F, Fnorm, mu, theta, B, E, M)
+    psi = get_gradients(w, F, Fnorm, mu, theta, B, E, N, M)
 
     if proj_method == "momentum":
         psi = project_with_momentum(w, psi, alpha, epsilon)
 
-    w = w - eta * psi
+    # apply mask
+    np.random.seed(step)
+    mask_psi = np.random.binomial(1, mask, size=psi.size)
+
+    w = w - eta * (mask_psi * psi)
 
     if proj_method == "clipping":
         w = project_with_clipping(w, epsilon)
@@ -295,7 +311,7 @@ def get_flux(
     F = np.zeros((E, M))
 
     for i in range(M):
-        F[:, i] = csr_matrix.dot(diags(mu[:, i] / w) * B.T, p[:, i])
+        F[:, i] = np.matmul(diags(mu[:, i]).todense() * diags(1 / w) * B.T, p[:, i])
 
     Fnorm = np.linalg.norm(F, axis=1, ord=1)
 

@@ -45,6 +45,7 @@ class BROT:
         GDexec: bool,
         proj_method: str,
         alpha_restituition: float,
+        mask: float,
         verbose: bool,
         it_check_start: int,
         TIME_STEP_EXP_VERB: int,
@@ -69,6 +70,7 @@ class BROT:
         :param GDexec: flag to execute GD
         :param proj_method: projection method
         :param alpha_restituition: alpha
+        :param mask: mask for stochastic GD (q)
         :param verbose: verbose flag for BROT metadata
         :param it_check_start: starting step for convergence check
         :param TIME_STEP_EXP_VERB: time frequency for serialization
@@ -93,6 +95,7 @@ class BROT:
         self.GDexec = GDexec
         self.proj_method = proj_method
         self.alpha_restituition = alpha_restituition
+        self.mask = mask
         self.verbose = verbose
         self.it_check_start = it_check_start
         self.TSEV = TIME_STEP_EXP_VERB
@@ -228,6 +231,7 @@ class BROT:
                     self.proj_method,
                     self.epsilon,
                     self.alpha_restituition,
+                    self.mask,
                     relax,
                     psi,
                     psievol,
